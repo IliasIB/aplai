@@ -74,7 +74,7 @@ convert_sudoku_to_bool(SudokuArray, B_Sudoku) :-
     ( for(Row,1,N), param(SudokuArray,B_Sudoku, N) do
         ( for(Col,1,N), param(SudokuArray,B_Sudoku, N, Row) do
             Value is SudokuArray[Row, Col],
-            ( for(Element,1,N), param(SudokuArray,B_Sudoku, N, Row, Col, Value) do
+            ( for(Element,1,N), param(B_Sudoku, Row, Col, Value) do
                 BoolValue is B_Sudoku[Row, Col, Element],
                 ( number(Value), Element =:= Value ->
                     BoolValue #= 1
