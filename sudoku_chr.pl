@@ -1,15 +1,23 @@
 :- use_module(library(chr)).
-%% solve_bool/2 solve_channel/1 sudoku_channel/2. convert_sudoku_to_bool/2 sudoku/4
+:- chr_option(debug, off).
 :- chr_constraint solve/1.
-:- chr_constraint cleanup/0, solver/1, fill/0, square/3.
-%% :- chr_constraint print_solution/0, print_solution/1, print_solution/2.
+:- chr_constraint clean_store/0, solver/1, fill/0, square/3.
 :- consult('sudex_toledo.pl').
+
+solve_puzzles :-
+    solve_name(_),
+    fail.
+
+solve_name(Name) :-
+    puzzles(P,Name),
+    write(Name),nl,
+    once(time(solve(P))).
 
 solve(Sudoku) <=>
     make_squares(Sudoku, 0),
     fill,
     print_solution,
-    cleanup.
+    clean_store.
 
 make_squares([], _, _):- true.
 make_squares([Value|Rest], I, J) :-
@@ -46,7 +54,7 @@ fill <=> solver(2).
 solver(N), square(X,Y,domain(Domain)) # passive <=> length(Domain, Len), Len =:= N | member(Value, Domain), square(X,Y,num(Value)), fill.
 
 solver(N) <=> N == 9 | true.
-solver(N) <=> NN is N + 1, solver(NN).
+solver(N) <=> NewN is N + 1, solver(NewN).
 
 
 same_block(X1, Y1, X2, Y2):-
@@ -82,7 +90,5 @@ print_solution(I, J) :-
     NewJ is J + 1,
     print_solution(I, NewJ).
 
-
-
-cleanup \ square(_, _, _) <=> true.
-cleanup <=> true.
+clean_store \ square(_, _, _) <=> true.
+clean_store <=> true.

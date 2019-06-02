@@ -1,7 +1,54 @@
 :- lib(ic).
-:- import alldifferent/1 from ic_global.
+:- lib(util).
+:- compile("sudex_toledo").
+%% :- import alldifferent/1 from ic_global.
 
-solve(Sudoku) :-
+solve_puzzles :-
+    solve_name(_),
+    fail.
+
+solve_name(Name) :-
+    puzzles(P,Name),
+    write(Name),nl,
+    cputime(T1),
+    solve(P,SudokuArray),
+    search(SudokuArray, 0, input_order,indomain,complete,[backtrack(B)]),
+    cputime(T2),
+    TimeTaken is T2 - T1,
+    write(TimeTaken),nl,
+    write(B),nl.
+
+solve_puzzles_channel :-
+    solve_name_channel(_),
+    fail.
+
+solve_name_channel(Name) :-
+    puzzles(P,Name),
+    write(Name),nl,
+    cputime(T1),
+    solve_channel(P,SudokuArray),
+    search(SudokuArray, 0, first_fail,indomain,complete,[backtrack(B)]),
+    cputime(T2),
+    TimeTaken is T2 - T1,
+    write(TimeTaken),nl,
+    write(B),nl.
+
+solve_puzzles_bool :-
+    solve_name_bool(_),
+    fail.
+
+solve_name_bool(Name) :-
+    puzzles(P,Name),
+    write(Name),nl,
+    cputime(T1),
+    solve_bool(P,B_Sudoku),
+    search(B_Sudoku, 0, first_fail,indomain,complete,[backtrack(B)]),
+    cputime(T2),
+    TimeTaken is T2 - T1,
+    write(TimeTaken),nl,
+    write(B),nl.
+
+solve(Sudoku,SudokuArray) :-
     % Convert list to array
     (foreach(Row,Sudoku), foreach(RowArray,Out)
     do
@@ -23,8 +70,7 @@ solve(Sudoku) :-
     Block is integer(sqrt(N)),
     ( multifor([I,J],1,N,Block), param(SudokuArray,Block) do
         alldifferent(concat(SudokuArray[I..I+Block-1, J..J+Block-1]))
-    ),
-    labeling(SudokuArray).
+    ).
 
 solve_bool(Sudoku, B_Sudoku) :-
     (foreach(Row,Sudoku), foreach(RowArray,Out)
@@ -58,12 +104,11 @@ solve_bool(Sudoku, B_Sudoku) :-
         ( for(K,1,N), param(B_Sudoku,Block, I, J) do
             sum(concat(B_Sudoku[I..I+Block-1, J..J+Block-1, K])) #= 1
         )
-    ),
-    labeling(B_Sudoku).
+    ).
 
 
-solve_channel(Sudoku) :-
-    solve(Sudoku),
+solve_channel(Sudoku,SudokuArray) :-
+    solve(Sudoku,SudokuArray),
     solve_bool(Sudoku, B_Sudoku),
     sudoku_channel(Sudoku, B_Sudoku).
 
@@ -101,30 +146,3 @@ sudoku_channel(Sudoku, B_Sudoku) :-
             ic_global:bool_channeling(Value,ValueBools,1)
         )
     ).
-
-
-lambda(P) :- P =
-        [[1,_,_, _,_,_, _,_,_],
-         [_,_,2, 7,4,_, _,_,_],
-         [_,_,_, 5,_,_, _,_,4],
-
-         [_,3,_, _,_,_, _,_,_],
-         [7,5,_, _,_,_, _,_,_],
-         [_,_,_, _,_,9, 6,_,_],
-
-         [_,4,_, _,_,6, _,_,_],
-         [_,_,_, _,_,_, _,7,1],
-         [_,_,_, _,_,1, _,3,_]].
-
-b_lambda(P) :- P =
-        [[[1,0,0,0,0,0,0,0,0],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-         [[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[0,1,0,0,0,0,0,0,0], [0,0,0,0,0,0,1,0,0],[0,0,0,1,0,0,0,0,0],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-         [[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [0,0,0,0,1,0,0,0,0],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[0,0,0,1,0,0,0,0,0]],
-
-         [[_,_,_,_,_,_,_,_,_],[0,0,1,0,0,0,0,0,0],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-         [[0,0,0,0,0,0,1,0,0],[0,0,0,0,1,0,0,0,0],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-         [[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[0,0,0,0,0,0,0,0,1], [0,0,0,0,0,1,0,0,0],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-
-         [[_,_,_,_,_,_,_,_,_],[0,0,0,1,0,0,0,0,0],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[0,0,0,0,0,1,0,0,0], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_]],
-         [[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[0,0,0,0,0,0,1,0,0],[1,0,0,0,0,0,0,0,0]],
-         [[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_], [_,_,_,_,_,_,_,_,_],[_,_,_,_,_,_,_,_,_],[1,0,0,0,0,0,0,0,0], [_,_,_,_,_,_,_,_,_],[0,0,1,0,0,0,0,0,0],[_,_,_,_,_,_,_,_,_]]].
